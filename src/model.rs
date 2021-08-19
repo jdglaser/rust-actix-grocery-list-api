@@ -4,17 +4,19 @@ use crate::db::Database;
 use actix_web::web;
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ItemTemplate {
     name: String,
-    category: String
+    cool_category: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Item {
     id: usize,
     name: String,
     category: String,
-    checked: bool
+    is_checked: bool
 }
 
 impl Item {
@@ -22,8 +24,8 @@ impl Item {
         Item {
             id,
             name: new_item.name,
-            category: new_item.category,
-            checked: false
+            category: new_item.cool_category,
+            is_checked: false
         }
     }
 

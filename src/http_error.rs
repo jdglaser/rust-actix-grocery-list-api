@@ -1,34 +1,40 @@
-use actix_web::{http, ResponseError, HttpResponse, dev::HttpResponseBuilder};
+use actix_web::{http, ResponseError, HttpResponse};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpResponseError {
-    message: String,
-    status_code:  http::StatusCode
+    detail: String,
+    status_code: u16
 }
 
 impl HttpResponseError {
-    pub fn new(message: String, status_code: http::StatusCode) -> HttpResponseError {
+    pub fn new(detail: String, status_code: http::StatusCode) -> HttpResponseError {
         HttpResponseError {
-            message,
-            status_code
+            detail,
+            status_code: status_code.as_u16()
         }
     }
 }
 
 impl std::fmt::Display for HttpResponseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Error: {}", self.message)
+        write!(f, "Error: {}", self.detail)
     }
 }
 
 impl ResponseError for HttpResponseError {
     fn error_response(&self) -> HttpResponse {
-        HttpResponseBuilder::new(self.status_code())
-            .set_header(http::header::CONTENT_TYPE, "text/html; charset=utf-8")
-            .body(self.to_string())
+        HttpResponse::build(self.status_code())
+            .set_header(http::header::CONTENT_TYPE, "application/problem+json")
+            .json(self)
     }
 
     fn status_code(&self) -> http::StatusCode {
-        self.status_code
+        if let Ok(status_code) = http::StatusCode::from_u16(self.status_code) {
+            return status_code
+        } else {
+            panic!("Invalid status code");
+        }
     }
 }
