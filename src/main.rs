@@ -1,4 +1,5 @@
 use actix_web::{HttpServer, App, web, middleware::Logger};
+use rusqlite::Connection;
 
 #[macro_use]
 extern crate log;
@@ -17,16 +18,14 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting app!");
 
+    let conn = Connection::open("data.db").unwrap();
+    conn.close().unwrap();
     let app_state = web::Data::new(state::AppState::new().await);
-
-    let migration_result = sqlx::migrate!("./migrations")
-        .run(&app_state.database_pool)
-        .await;
     
-    if let Err(error) = migration_result {
-        error!("Error applying migration");
-        panic!("Problem applying migration: {}", error);
-    }
+    sqlx::migrate!("./migrations")
+        .run(&app_state.database_pool)
+        .await
+        .unwrap();
 
     HttpServer::new(move || {
         App::new()
