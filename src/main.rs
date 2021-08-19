@@ -19,9 +19,14 @@ async fn main() -> std::io::Result<()> {
 
     let app_state = web::Data::new(state::AppState::new().await);
 
-    let _ = sqlx::migrate!("./migrations")
+    let migration_result = sqlx::migrate!("./migrations")
         .run(&app_state.database_pool)
         .await;
+    
+    if let Err(error) = migration_result {
+        error!("Error applying migration");
+        panic!("Problem applying migration: {}", error);
+    }
 
     HttpServer::new(move || {
         App::new()

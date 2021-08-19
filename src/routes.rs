@@ -13,7 +13,7 @@ async fn get_item(state: web::Data<state::AppState>, id: web::Path<i32>) -> impl
     info!("{:?}", result);
 
     match result {
-        Ok(Some(item)) => Ok(HttpResponse::Ok().json(item)),
+        Ok(item) => Ok(HttpResponse::Ok().json(item)),
         _ => Err(HttpResponseError::new(
             format!("Item {} not found", id),
             http::StatusCode::NOT_FOUND
@@ -23,12 +23,14 @@ async fn get_item(state: web::Data<state::AppState>, id: web::Path<i32>) -> impl
 
 #[get("/")]
 async fn get_items(state: web::Data<state::AppState>) -> impl Responder {
-    let items = Item::get_items(&state.database_pool).await;
+    let result = Item::get_items(&state.database_pool).await;
 
-    if let Ok(items) = items {
-        Ok(HttpResponse::Ok().json(items))
-    } else {
-        Err(HttpResponseError::new(String::from("error retrieving items"), http::StatusCode::BAD_REQUEST))
+    match result {
+        Ok(items) => Ok(HttpResponse::Ok().json(items)),
+        Err(error) => {
+            error!("Error: {}", error.to_string());
+            Err(HttpResponseError::new(String::from("Problem getting items from database"), http::StatusCode::BAD_REQUEST))
+        }
     }
 }
 
