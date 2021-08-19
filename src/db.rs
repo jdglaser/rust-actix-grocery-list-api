@@ -1,16 +1,11 @@
-use crate::model::Item;
-use std::sync::Mutex;
+use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::SqlitePool;
 
-pub struct Database {
-    pub items: Mutex<Vec<Item>>
-}
-
-impl Database {
-    pub fn new (thread_name: &str) -> Self {
-
-        info!("Creating new db on thread {}", thread_name);
-        Self {
-            items: Mutex::from(Vec::new())
-        }
-    }
+pub async fn get_database_pool(database_url: &str) -> Result<SqlitePool, sqlx::Error> {
+    let foo = SqlitePoolOptions::new()
+        .max_connections(5)
+        .connect("sqlite::memory:")
+        .await;
+    
+    foo
 }

@@ -1,7 +1,7 @@
-// I guess we can just put the model and repo code together
 use serde::{Deserialize, Serialize};
-use crate::db::Database;
-use actix_web::web;
+use sqlx::SqlitePool;
+use sqlx::Row;
+use sqlx::sqlite::{SqliteRow};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -13,44 +13,47 @@ pub struct ItemTemplate {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Item {
-    id: usize,
+    id: i32,
     name: String,
     category: String,
     is_checked: bool
 }
 
 impl Item {
-    pub fn new(id: usize, new_item: ItemTemplate) -> Item {
+    pub async fn get_item(db: &SqlitePool, id: i32) -> Result<Option<Item>, sqlx::Error> {        
+        let result = sqlx::query("SELECT * FROM items WHERE id = ?")
+            .bind(id)
+            .map(Item::map_item)
+            .fetch_optional(db)
+            .await?;
+        
+        Ok(result)
+    }
+
+    pub async fn get_items(db: &SqlitePool) -> Result<Vec<Item>, sqlx::Error> {
+        let result = sqlx::query("SELECT * FROM items").map(Item::map_item).fetch_all(db).await?;
+
+        Ok(result)
+    }
+
+    pub async fn create_item(db: &SqlitePool, new_item: ItemTemplate) -> Result<Item, sqlx::Error> {
+
+        let result = sqlx::query("INSERT INTO items (name, category) VALUES (?, ?) RETURNING *")
+            .bind(new_item.name)
+            .bind(new_item.cool_category)
+            .map(Item::map_item)
+            .fetch_one(db)
+            .await?;
+
+        Ok(result)
+    }
+
+    pub fn map_item(row: SqliteRow) -> Item {
         Item {
-            id,
-            name: new_item.name,
-            category: new_item.cool_category,
-            is_checked: false
+            id: row.get("id"),
+            name: row.get("name"),
+            category: row.get("category"),
+            is_checked: row.get("is_checked")
         }
-    }
-
-    pub async fn get_item(db: &web::Data<Database>, id: usize) -> Option<Item> {        
-        let items = db.items.lock().unwrap();
-        let result = items.iter().find(|i| i.id == id);
-    
-        if let Some(item) = result {
-            Some(item.clone())
-        } else {
-            None
-        }
-    }
-
-    pub async fn get_items(db: &web::Data<Database>) -> Vec<Item> {
-        db.items.lock().unwrap().to_vec()
-    }
-
-    pub async fn create_item(db: &web::Data<Database>, new_item: ItemTemplate) {
-
-        let mut items = db.items.lock().unwrap();
-        let size = items.len();
-
-        let item = Item::new(size, new_item);
-
-        items.push(item);
     }
 }
