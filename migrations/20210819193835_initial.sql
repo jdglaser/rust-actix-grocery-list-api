@@ -5,6 +5,3 @@ CREATE TABLE items (
     category TEXT,
     is_checked BOOL DEFAULT FALSE
 );
-
-INSERT INTO items (name, category)
-VALUES ('foo', 'cat1'), ('bar', 'cat2');

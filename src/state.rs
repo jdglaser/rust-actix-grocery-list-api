@@ -8,7 +8,7 @@ pub struct AppState {
 impl AppState {
     pub async fn new() -> AppState {
         AppState {
-            database_pool: db::get_database_pool("sqlite://data.db").await.unwrap()
+            database_pool: db::get_database_pool().await
         }
     }
 }

@@ -58,3 +58,60 @@ impl Item {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::db::get_database_pool;
+
+    async fn setup_db() -> SqlitePool {
+        let pool = get_database_pool().await;
+        
+        sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .unwrap();
+        
+        pool
+    }
+
+    async fn create_test_item(pool: &SqlitePool) -> Item {
+        let result = Item::create_item(pool, ItemTemplate {
+            name: String::from("foo"),
+            cool_category: String::from("bar")
+        }).await.unwrap();
+        result
+    }
+
+    #[actix_rt::test]
+    async fn it_creates_an_item() {
+        let pool = setup_db().await;
+        let item = create_test_item(&pool).await;
+
+        assert_eq!("foo", item.name)
+    }
+
+    #[actix_rt::test]
+    async fn it_gets_item() {
+        let pool = setup_db().await;
+        let item = create_test_item(&pool).await;
+
+        let result = Item::get_item(&pool, item.id).await;
+        assert!(result.is_ok());
+        assert_eq!(item.id, result.unwrap().id);
+    }
+
+    #[actix_rt::test]
+    async fn it_gets_all_items() {
+        let pool = setup_db().await;
+        let _ = create_test_item(&pool).await;
+        let _ = create_test_item(&pool).await;
+
+        let result = Item::get_items(&pool).await;
+        assert!(result.is_ok());
+        let items = result.unwrap();
+        println!("{:?}", items);
+        assert_eq!(2, items.len());
+        assert_eq!("foo", items[0].name);
+    }
+}
