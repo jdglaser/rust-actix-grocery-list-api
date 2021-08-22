@@ -1,14 +1,13 @@
 use actix_web::{HttpServer, App, web, middleware::Logger};
-// use rusqlite::Connection;
 
 #[macro_use]
 extern crate log;
 
-mod routes;
 mod db;
 mod http_error;
-mod model;
+mod item;
 mod config;
+mod auth;
 
 mod tests;
 mod state;
@@ -19,10 +18,6 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting app!");
 
-    /*
-    let conn = Connection::open("data.db").unwrap();
-    conn.close().unwrap();
-    */
     let app_state = web::Data::new(state::AppState::new().await);
     
     sqlx::migrate!("./migrations")
@@ -34,7 +29,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::new("%a %{User-Agent}i"))
             .app_data(app_state.clone())
-            .configure(routes::init)
+            .configure(item::init)
     })
     .workers(4)
     .bind("127.0.0.1:8080")?

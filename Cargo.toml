@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = "3"
+actix-web = "3.3.2"
 sqlx = { version = "0.5", features = [ "sqlite" ] }
 sqlx-cli = "0.5.6"
 serde = "1.0.127"
@@ -19,6 +19,8 @@ envy = "0.4"
 dotenv = "0.15.0"
 lazy_static = "1.4.0"
 actix-rt = "2.2.0"
+futures = "0.3.16"
+jsonwebtoken = "7.2.0"
 
 [env]
 RUST_LOG = "sqlx=error,info"

@@ -3,11 +3,12 @@ use actix_web::{get, post, Responder, HttpResponse, web, http};
 use crate::state;
 use crate::http_error::HttpResponseError;
 
-use crate::model::{Item, ItemTemplate};
+use crate::item::{Item, ItemTemplate};
+use crate::auth::service::AuthorizationService;
 
 
 #[get("/{id}")]
-async fn get_item(state: web::Data<state::AppState>, id: web::Path<i32>) -> impl Responder {
+async fn get_item(_: AuthorizationService, state: web::Data<state::AppState>, id: web::Path<i32>) -> impl Responder {
     let result = Item::get_item(&state.database_pool, *id).await;
 
     info!("{:?}", result);

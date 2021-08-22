@@ -8,7 +8,7 @@ use anyhow::Result;
 #[serde(rename_all = "camelCase")]
 pub struct ItemTemplate {
     name: String,
-    cool_category: String
+    category: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -41,7 +41,7 @@ impl Item {
 
         let result = sqlx::query("INSERT INTO items (name, category) VALUES (?, ?) RETURNING *")
             .bind(new_item.name)
-            .bind(new_item.cool_category)
+            .bind(new_item.category)
             .map(Item::map_item)
             .fetch_one(db)
             .await?;
@@ -66,11 +66,11 @@ mod tests {
 
     async fn setup_db() -> SqlitePool {
         let pool = get_database_pool().await;
-        
+
         sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await
-        .unwrap();
+            .run(&pool)
+            .await
+            .unwrap();
         
         pool
     }
@@ -78,7 +78,7 @@ mod tests {
     async fn create_test_item(pool: &SqlitePool) -> Item {
         let result = Item::create_item(pool, ItemTemplate {
             name: String::from("foo"),
-            cool_category: String::from("bar")
+            category: String::from("bar")
         }).await.unwrap();
         result
     }
