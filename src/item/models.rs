@@ -14,7 +14,7 @@ pub struct ItemTemplate {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Item {
-    id: i32,
+    item_id: i32,
     name: String,
     category: String,
     is_checked: bool
@@ -51,7 +51,7 @@ impl Item {
 
     pub fn map_item(row: SqliteRow) -> Item {
         Item {
-            id: row.get("id"),
+            item_id: row.get("id"),
             name: row.get("name"),
             category: row.get("category"),
             is_checked: row.get("is_checked")
@@ -96,9 +96,9 @@ mod tests {
         let pool = setup_db().await;
         let item = create_test_item(&pool).await;
 
-        let result = Item::get_item(&pool, item.id).await;
+        let result = Item::get_item(&pool, item.item_id).await;
         assert!(result.is_ok());
-        assert_eq!(item.id, result.unwrap().id);
+        assert_eq!(item.item_id, result.unwrap().item_id);
     }
 
     #[actix_rt::test]

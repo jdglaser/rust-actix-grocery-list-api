@@ -11,6 +11,17 @@ mod auth;
 
 mod tests;
 mod state;
+mod errors;
+mod user;
+
+async fn migrate_db() {
+    let database_pool = db::get_database_pool().await;
+
+    sqlx::migrate!("./migrations")
+        .run(&database_pool)
+        .await
+        .unwrap();
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -18,18 +29,18 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting app!");
 
-    let app_state = web::Data::new(state::AppState::new().await);
-    
-    sqlx::migrate!("./migrations")
-        .run(&app_state.database_pool)
-        .await
-        .unwrap();
+    migrate_db().await;
+
+    let database_pool = db::get_database_pool().await;
+
+    let app_state = web::Data::new(state::AppState::new(database_pool).await);
 
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::new("%a %{User-Agent}i"))
             .app_data(app_state.clone())
             .configure(item::init)
+            .configure(user::init)
     })
     .workers(4)
     .bind("127.0.0.1:8080")?

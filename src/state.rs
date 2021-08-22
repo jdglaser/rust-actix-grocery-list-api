@@ -1,14 +1,18 @@
-use crate::db;
 use sqlx::SqlitePool;
+use crate::user::service::UserService;
 
 pub struct AppState {
-    pub database_pool: SqlitePool
+    pub database_pool: SqlitePool,
+    pub user_service: UserService,
 }
 
 impl AppState {
-    pub async fn new() -> AppState {
+    pub async fn new(database_pool: SqlitePool) -> AppState {
         AppState {
-            database_pool: db::get_database_pool().await
+            database_pool: database_pool.clone(),
+            user_service: UserService {
+                db: database_pool.clone()
+            }
         }
     }
 }
