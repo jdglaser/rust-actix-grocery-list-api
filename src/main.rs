@@ -12,9 +12,17 @@ mod state;
 mod errors;
 mod user;
 
+use crate::config::get_config;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
+    if get_config().database_type == "file" {
+        let _ = std::fs::create_dir("./data/");
+        let conn = rusqlite::Connection::open("./data/database.db").unwrap();
+        let _ = conn.close();
+    }
 
     info!("Starting app!");
 

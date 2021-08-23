@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct Config {
-    pub database_url: String,
+    pub database_type: String,
     pub max_connections: u32,
     pub secret_key: String,
 }
