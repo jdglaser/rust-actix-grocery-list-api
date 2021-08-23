@@ -1,25 +1,21 @@
-use dotenv::dotenv;
 use serde::Deserialize;
-
-use lazy_static::lazy_static;
 
 #[derive(Clone, Deserialize, Debug)]
 pub struct Config {
-    pub database_url: String
+    pub database_url: String,
+    pub max_connections: u32,
+    pub secret_key: String,
 }
 
-// Throw the Config struct into a CONFIG lazy_static to avoid multiple processing
-lazy_static! {
-    pub static ref CONFIG: Config = get_config();
-}
+pub fn get_config() -> Config {
+    let mut settings = config::Config::default();
+    settings.merge(config::File::with_name("Settings")).unwrap()
+        .merge(config::Environment::new()).unwrap();
 
-fn get_config() -> Config {
-    dotenv().ok();
+    // Print out our settings (as a HashMap)
+    let config = settings.try_into::<Config>().unwrap();
 
-    match envy::from_env::<Config>() {
-        Ok(config) => config,
-        Err(error) => panic!("Configuration Error: {:#?}", error),
-    }
+    config 
 }
 
 #[cfg(test)]
@@ -29,7 +25,13 @@ mod tests {
     #[test]
     fn it_gets_config() {
         let config = get_config();
-        println!("{:?}", config);
-        assert!(config.database_url == "sqlite://:memory:")
+        assert_eq!("MY_KEY", config.secret_key);
+    }
+
+    #[test]
+    fn it_gets_overridden_config() {
+        std::env::set_var("SECRET_KEY", "MY_KEY_2");
+        let config = get_config();
+        assert_eq!("MY_KEY_2", config.secret_key);
     }
 }

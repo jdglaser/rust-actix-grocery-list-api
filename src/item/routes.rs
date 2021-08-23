@@ -3,7 +3,7 @@ use actix_web::{get, post, Responder, HttpResponse, web, http};
 use crate::state;
 
 use crate::item::{Item, ItemTemplate};
-use crate::auth::service::AuthorizationService;
+use crate::auth::AuthorizationService;
 use crate::errors::CustomError;
 
 
@@ -13,7 +13,7 @@ async fn get_item(_: AuthorizationService, state: web::Data<state::AppState>, id
 
     match result {
         Ok(item) => Ok(HttpResponse::Ok().json(item)),
-        Err(error) => Err(CustomError(
+        Err(_) => Err(CustomError(
             format!("Item {} not found", id),
             http::StatusCode::NOT_FOUND
         ))

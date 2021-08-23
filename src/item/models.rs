@@ -22,7 +22,7 @@ pub struct Item {
 
 impl Item {
     pub async fn get_item(db: &SqlitePool, id: i32) -> Result<Item> {        
-        let result = sqlx::query("SELECT * FROM items WHERE id = ?")
+        let result = sqlx::query("SELECT * FROM item WHERE item_id = ?")
             .bind(id)
             .map(Item::map_item)
             .fetch_one(db)
@@ -32,14 +32,14 @@ impl Item {
     }
 
     pub async fn get_items(db: &SqlitePool) -> Result<Vec<Item>> {
-        let result = sqlx::query("SELECT * FROM items").map(Item::map_item).fetch_all(db).await?;
+        let result = sqlx::query("SELECT * FROM item").map(Item::map_item).fetch_all(db).await?;
 
         Ok(result)
     }
 
     pub async fn create_item(db: &SqlitePool, new_item: ItemTemplate) -> Result<Item> {
 
-        let result = sqlx::query("INSERT INTO items (name, category) VALUES (?, ?) RETURNING *")
+        let result = sqlx::query("INSERT INTO item (name, category) VALUES (?, ?) RETURNING *")
             .bind(new_item.name)
             .bind(new_item.category)
             .map(Item::map_item)
@@ -51,7 +51,7 @@ impl Item {
 
     pub fn map_item(row: SqliteRow) -> Item {
         Item {
-            item_id: row.get("id"),
+            item_id: row.get("item_id"),
             name: row.get("name"),
             category: row.get("category"),
             is_checked: row.get("is_checked")

@@ -4,24 +4,13 @@ use actix_web::{HttpServer, App, web, middleware::Logger};
 extern crate log;
 
 mod db;
-mod http_error;
 mod item;
 mod config;
 mod auth;
 
-mod tests;
 mod state;
 mod errors;
 mod user;
-
-async fn migrate_db() {
-    let database_pool = db::get_database_pool().await;
-
-    sqlx::migrate!("./migrations")
-        .run(&database_pool)
-        .await
-        .unwrap();
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -29,9 +18,12 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting app!");
 
-    migrate_db().await;
-
     let database_pool = db::get_database_pool().await;
+
+    sqlx::migrate!("./migrations")
+        .run(&database_pool)
+        .await
+        .unwrap();
 
     let app_state = web::Data::new(state::AppState::new(database_pool).await);
 

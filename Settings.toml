@@ -1,0 +1,3 @@
+database_url = "sqlite://:memory:"
+max_connections = 5
+secret_key = "MY_KEY"
