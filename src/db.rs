@@ -6,8 +6,14 @@ pub async fn get_database_pool() -> SqlitePool {
     let config = get_config();
 
     let db_url = match &*config.database_type {
-        "memory" => "sqlite://:memory:",
-        "file" => "sqlite://data/database.db",
+        "memory" => {
+            info!("Using in memory database");
+            "sqlite://:memory:"
+        },
+        "file" => {
+            info!("Using database file");
+            "sqlite://data/database.db"
+        },
         _ => panic!("Error: DATBASE_TYPE setting must be either 'memory' or 'file'")
     };
 

@@ -1,7 +1,9 @@
-use actix_web::{HttpServer, App, web, middleware::Logger};
+use actix_web::{HttpServer, App, web, middleware::Logger, HttpResponse};
 
 #[macro_use]
 extern crate log;
+
+use serde::{Deserialize, Serialize};
 
 mod db;
 mod item;
@@ -13,6 +15,11 @@ mod errors;
 mod user;
 
 use crate::config::get_config;
+
+#[derive(Serialize, Deserialize)]
+struct HealthStatus {
+    status: String
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -41,6 +48,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(app_state.clone())
             .configure(item::init)
             .configure(user::init)
+            .route("/health", web::get().to(|| HttpResponse::Ok().json(HealthStatus{status: "Ok".to_string()})))
     })
     .workers(4)
     .bind("127.0.0.1:8080")?

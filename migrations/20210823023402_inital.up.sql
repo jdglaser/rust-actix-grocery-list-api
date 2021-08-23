@@ -1,4 +1,3 @@
--- Add migration script here
 CREATE TABLE item (
     item_id INTEGER PRIMARY KEY,
     name TEXT,
