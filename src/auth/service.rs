@@ -6,7 +6,9 @@ use crate::auth::models::Claims;
 use chrono::{Utc, Duration};
 use crate::config::get_config;
 
-pub struct AuthorizationService;
+pub struct AuthorizationService {
+    pub token: TokenData<Claims>
+}
 
 impl FromRequest for AuthorizationService {
     type Error = Error;
@@ -20,7 +22,7 @@ impl FromRequest for AuthorizationService {
                 let split: Vec<&str> = auth.unwrap().to_str().unwrap().split("Bearer").collect();
                 let token = split[1].trim();
                 match AuthorizationService::decode_token(token) {
-                    Ok(_) => ok(AuthorizationService),
+                    Ok(token_data) => ok(AuthorizationService {token: token_data}),
                     Err(_) => err(ErrorUnauthorized("Invalid token"))
                 }
             },
@@ -30,6 +32,10 @@ impl FromRequest for AuthorizationService {
 }
 
 impl AuthorizationService {
+    pub fn get_username(&self) -> String {
+        self.token.claims.sub.clone()
+    }
+
     pub fn encode_token(username: &str) -> String {
         let config = get_config();
         let key = config.secret_key;

@@ -21,6 +21,15 @@ struct HealthStatus {
     status: String
 }
 
+fn config_app(app_state: web::Data<state::AppState>) -> Box<dyn Fn(&mut web::ServiceConfig)> {
+    Box::new(move |cfg: &mut web::ServiceConfig| {
+        cfg.app_data(app_state.clone());
+        cfg.route("/health", web::get().to(|| HttpResponse::Ok().json(HealthStatus{status: "Ok".to_string()})));
+        item::init(cfg);
+        user::init(cfg);
+    })
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
@@ -45,10 +54,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::new("%a %{User-Agent}i"))
-            .app_data(app_state.clone())
-            .configure(item::init)
-            .configure(user::init)
-            .route("/health", web::get().to(|| HttpResponse::Ok().json(HealthStatus{status: "Ok".to_string()})))
+            .configure(config_app(app_state.clone()))
     })
     .workers(4)
     .bind("127.0.0.1:8080")?

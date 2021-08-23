@@ -26,12 +26,9 @@ mod tests {
     fn it_gets_config() {
         let config = get_config();
         assert_eq!("MY_KEY", config.secret_key);
-    }
-
-    #[test]
-    fn it_gets_overridden_config() {
         std::env::set_var("SECRET_KEY", "MY_KEY_2");
         let config = get_config();
         assert_eq!("MY_KEY_2", config.secret_key);
+        std::env::remove_var("SECRET_KEY");
     }
 }
