@@ -7,8 +7,8 @@ use anyhow::Result;
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemTemplate {
-    name: String,
-    category: String
+    pub name: String,
+    pub category: String
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -62,18 +62,7 @@ impl Item {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::get_database_pool;
-
-    async fn setup_db() -> SqlitePool {
-        let pool = get_database_pool().await;
-
-        sqlx::migrate!("./migrations")
-            .run(&pool)
-            .await
-            .unwrap();
-        
-        pool
-    }
+    use crate::util::test_util;
 
     async fn create_test_item(pool: &SqlitePool) -> Item {
         let result = Item::create_item(pool, ItemTemplate {
@@ -85,7 +74,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn it_creates_an_item() {
-        let pool = setup_db().await;
+        let pool = test_util::setup_db().await;
         let item = create_test_item(&pool).await;
 
         assert_eq!("foo", item.name)
@@ -93,7 +82,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn it_gets_item() {
-        let pool = setup_db().await;
+        let pool = test_util::setup_db().await;
         let item = create_test_item(&pool).await;
 
         let result = Item::get_item(&pool, item.item_id).await;
@@ -103,7 +92,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn it_gets_all_items() {
-        let pool = setup_db().await;
+        let pool = test_util::setup_db().await;
         let _ = create_test_item(&pool).await;
         let _ = create_test_item(&pool).await;
 

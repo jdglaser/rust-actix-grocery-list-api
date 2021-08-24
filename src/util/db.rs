@@ -2,15 +2,20 @@ use sqlx::sqlite::SqlitePoolOptions;
 use sqlx::SqlitePool;
 use crate::config::get_config;
 
-pub async fn get_database_pool() -> SqlitePool {
+pub enum DatabaseType {
+    MEMORY,
+    FILE,
+}
+
+pub async fn get_database_pool(database_type: DatabaseType) -> SqlitePool {
     let config = get_config();
 
-    let db_url = match &*config.database_type {
-        "memory" => {
+    let db_url = match database_type {
+        DatabaseType::MEMORY => {
             info!("Using in memory database");
             "sqlite://:memory:"
         },
-        "file" => {
+        DatabaseType::FILE => {
             info!("Using database file");
             "sqlite://data/database.db"
         },

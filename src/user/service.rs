@@ -1,17 +1,24 @@
 use sqlx::SqlitePool;
-use crate::user::models::{User, UserTemplate, UserTemplateHashed};
 use crypto::sha2::Sha256;
 use crypto::digest::Digest;
 use anyhow::{Result};
-use crate::errors::CustomError;
 use actix_web::{Error, http::StatusCode};
+
 use crate::auth::AuthorizationService;
+use crate::util::errors::CustomError;
+use crate::user::models::{User, UserTemplate, UserTemplateHashed};
 
 pub struct UserService {
     pub db: SqlitePool
 }
 
 impl UserService {
+    pub fn new(db: SqlitePool) -> UserService {
+        UserService {
+            db
+        }
+    }
+
     pub async fn register_user(&self, user_template: UserTemplate) -> Result<String, Error> {
         let checked_user = User::find_user_by_username(&self.db, &user_template.username).await;
         match checked_user {

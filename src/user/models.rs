@@ -52,3 +52,12 @@ impl User {
         }
     }
 }
+
+impl UserTemplate {
+    pub fn new(username: String, password: String) -> UserTemplate {
+        UserTemplate {
+            username,
+            password
+        }
+    }
+}

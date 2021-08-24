@@ -4,7 +4,7 @@ use crate::state;
 
 use crate::item::{Item, ItemTemplate};
 use crate::auth::AuthorizationService;
-use crate::errors::CustomError;
+use crate::util::errors::CustomError;
 
 
 #[get("/{id}")]
@@ -20,7 +20,7 @@ async fn get_item(_: AuthorizationService, state: web::Data<state::AppState>, id
     }
 }
 
-#[get("/")]
+#[get("")]
 async fn get_items(_: AuthorizationService, state: web::Data<state::AppState>) -> impl Responder {
     let result = Item::get_items(&state.database_pool).await;
 
@@ -33,10 +33,13 @@ async fn get_items(_: AuthorizationService, state: web::Data<state::AppState>) -
     }
 }
 
-#[post("/")]
+#[post("")]
 async fn create_item(_: AuthorizationService,
                      state: web::Data<state::AppState>, 
-                     new_item: web::Json<ItemTemplate>) -> impl Responder {
+                     new_item: web::Json<ItemTemplate>,
+                     test: web::Query<String>) -> impl Responder {
+
+    println!("PARAMS: {}", test);
 
     let created_item = Item::create_item(&state.database_pool, new_item.into_inner()).await;
 

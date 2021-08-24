@@ -5,14 +5,15 @@ extern crate log;
 
 use serde::{Deserialize, Serialize};
 
-mod db;
 mod item;
 mod config;
 mod auth;
 
-mod state;
-mod errors;
+mod util;
 mod user;
+
+use util::db;
+use util::state;
 
 use crate::config::get_config;
 
@@ -34,15 +35,18 @@ fn config_app(app_state: web::Data<state::AppState>) -> Box<dyn Fn(&mut web::Ser
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    if get_config().database_type == "file" {
+    let database_type = if get_config().database_type == "file" {
         let _ = std::fs::create_dir("./data/");
         let conn = rusqlite::Connection::open("./data/database.db").unwrap();
         let _ = conn.close();
-    }
+        db::DatabaseType::FILE
+    } else {
+        db::DatabaseType::MEMORY
+    };
 
     info!("Starting app!");
 
-    let database_pool = db::get_database_pool().await;
+    let database_pool = db::get_database_pool(database_type).await;
 
     sqlx::migrate!("./migrations")
         .run(&database_pool)
