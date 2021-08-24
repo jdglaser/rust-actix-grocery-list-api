@@ -74,7 +74,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn it_creates_an_item() {
-        let pool = test_util::setup_db().await;
+        let pool = test_util::setup_test_db().await;
         let item = create_test_item(&pool).await;
 
         assert_eq!("foo", item.name)
@@ -82,7 +82,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn it_gets_item() {
-        let pool = test_util::setup_db().await;
+        let pool = test_util::setup_test_db().await;
         let item = create_test_item(&pool).await;
 
         let result = Item::get_item(&pool, item.item_id).await;
@@ -92,7 +92,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn it_gets_all_items() {
-        let pool = test_util::setup_db().await;
+        let pool = test_util::setup_test_db().await;
         let _ = create_test_item(&pool).await;
         let _ = create_test_item(&pool).await;
 

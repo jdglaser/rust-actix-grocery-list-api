@@ -1,4 +1,4 @@
-use actix_web::{HttpServer, App, web, middleware::Logger, HttpResponse};
+use actix_web::{HttpServer, App, web, middleware::Logger, HttpResponse, error};
 
 #[macro_use]
 extern crate log;
@@ -22,10 +22,23 @@ struct HealthStatus {
     status: String
 }
 
-fn config_app(app_state: web::Data<state::AppState>) -> Box<dyn Fn(&mut web::ServiceConfig)> {
+pub fn config_app(app_state: web::Data<state::AppState>) -> Box<dyn Fn(&mut web::ServiceConfig)> {
     Box::new(move |cfg: &mut web::ServiceConfig| {
         cfg.app_data(app_state.clone());
         cfg.route("/health", web::get().to(|| HttpResponse::Ok().json(HealthStatus{status: "Ok".to_string()})));
+        cfg.app_data(
+            web::JsonConfig::default().error_handler(
+                |err, _req| {
+                     error::InternalError::from_response(
+                          "",
+                          HttpResponse::BadRequest()
+                              .content_type("application/json")
+                              .body(format!(r#"{{"error":"{}"}}"#, err)),
+                      )
+                      .into()
+                  }
+            )
+        );
         item::init(cfg);
         user::init(cfg);
     })
@@ -53,7 +66,7 @@ async fn main() -> std::io::Result<()> {
         .await
         .unwrap();
 
-    let app_state = web::Data::new(state::AppState::new(database_pool).await);
+    let app_state = web::Data::new(state::AppState::new(database_pool));
 
     HttpServer::new(move || {
         App::new()

@@ -1738,6 +1738,7 @@ dependencies = [
  "rusqlite",
  "rust-crypto",
  "serde 1.0.127",
+ "serde_json",
  "sqlx",
  "sqlx-cli",
 ]
