@@ -7,6 +7,16 @@ pub enum DatabaseType {
     FILE,
 }
 
+impl DatabaseType {
+    pub fn from_str(value: &str) -> Result<DatabaseType, String> {
+        match value {
+            "memory" => Ok(DatabaseType::MEMORY),
+            "file" => Ok(DatabaseType::FILE),
+            _ => Err(format!("{} is not a valid DatabaseType", value))
+        }
+    }
+}
+
 pub async fn get_database_pool(database_type: DatabaseType) -> SqlitePool {
     let config = get_config();
 
@@ -18,8 +28,7 @@ pub async fn get_database_pool(database_type: DatabaseType) -> SqlitePool {
         DatabaseType::FILE => {
             info!("Using database file");
             "sqlite://data/database.db"
-        },
-        _ => panic!("Error: DATBASE_TYPE setting must be either 'memory' or 'file'")
+        }
     };
 
     SqlitePoolOptions::new()

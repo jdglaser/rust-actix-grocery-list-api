@@ -4,6 +4,7 @@ use actix_web::{HttpServer, App, web, middleware::Logger, HttpResponse, error};
 extern crate log;
 
 use serde::{Deserialize, Serialize};
+use crate::util::db::DatabaseType;
 
 mod item;
 mod config;
@@ -48,14 +49,14 @@ pub fn config_app(app_state: web::Data<state::AppState>) -> Box<dyn Fn(&mut web:
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
-    let database_type = if get_config().database_type == "file" {
+    let config = get_config();
+    let database_type = DatabaseType::from_str(&config.database_type).unwrap();
+
+    if let DatabaseType::FILE = database_type {
         let _ = std::fs::create_dir("./data/");
         let conn = rusqlite::Connection::open("./data/database.db").unwrap();
         let _ = conn.close();
-        db::DatabaseType::FILE
-    } else {
-        db::DatabaseType::MEMORY
-    };
+    }
 
     info!("Starting app!");
 

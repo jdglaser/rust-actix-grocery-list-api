@@ -1,13 +1,16 @@
 use sqlx::sqlite::SqlitePool;
+use actix_web::{test, App, dev, web};
+use serde_json::Value;
+use futures::StreamExt;
+
+use crate::config_app;
 use crate::db;
 use crate::db::{DatabaseType};
-use actix_web::{test, App, web, dev};
 use crate::user::service::UserService;
 use crate::user::{User, UserTemplate};
 use crate::state::AppState;
-use crate::config_app;
-use serde::{de::DeserializeOwned};
 
+#[allow(dead_code)]
 pub async fn setup_test_db() -> SqlitePool {
     let pool = db::get_database_pool(DatabaseType::MEMORY).await;
 
@@ -19,6 +22,7 @@ pub async fn setup_test_db() -> SqlitePool {
     pool
 }
 
+#[allow(dead_code)]
 pub async fn login_test_user(req: test::TestRequest, db: &SqlitePool) -> test::TestRequest {
     let test_user = UserTemplate::new("JohnDoe".to_string(), "1234".to_string());
     let user_service = UserService::new(db.clone());
@@ -35,7 +39,15 @@ pub async fn login_test_user(req: test::TestRequest, db: &SqlitePool) -> test::T
     req.header("Authorization", format!("Bearer {}", token))
 }
 
-pub async fn make_request(req: test::TestRequest, db: &SqlitePool) -> dev::ServiceResponse {
+#[allow(dead_code)]
+pub async fn get_test_app_state() -> web::Data<AppState> {
+    let db = setup_test_db().await;
+    AppState::as_web_data(db)
+}
+
+#[allow(dead_code)]
+pub async fn make_request(mut req: test::TestRequest, db: &SqlitePool) -> dev::ServiceResponse {
+    req = login_test_user(req, db).await;
     let mut app = test::init_service(
         App::new()
             .configure(
@@ -48,7 +60,11 @@ pub async fn make_request(req: test::TestRequest, db: &SqlitePool) -> dev::Servi
     test::call_service(&mut app, req.to_request()).await
 }
 
-pub async fn get_resp_body<T: DeserializeOwned>(res: dev::ServiceResponse) -> T {
-    let result: T = test::read_body_json(res).await;
-    result
+#[allow(dead_code)]
+pub async fn get_resp_body(mut res: dev::ServiceResponse) -> Value {
+    let (bytes, mut _resp) = res.take_body().into_future().await;
+    let bytes = bytes.unwrap().unwrap();
+    let string = std::str::from_utf8(&bytes);
+    let body: Value = serde_json::from_str(string.unwrap()).unwrap();
+    body
 }

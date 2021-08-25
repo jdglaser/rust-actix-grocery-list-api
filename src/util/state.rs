@@ -1,7 +1,5 @@
 use sqlx::SqlitePool;
-use sqlx::Pool;
 use crate::user::service::UserService;
-use serde::{Serialize, Deserialize};
 use actix_web::{web};
 
 pub struct AppState {

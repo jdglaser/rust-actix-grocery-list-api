@@ -56,45 +56,60 @@ pub fn init(cfg: &mut web::ServiceConfig) {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::{test, web, App, body::Body, dev};
-    use crate::item::{Item, ItemTemplate};
+    use actix_web::{test, dev};
+    use sqlx::SqlitePool;
+    use crate::item::{ItemTemplate};
     use crate::util::test_util;
-    use serde_json::{json, Value};
 
-    #[actix_rt::test]
-    async fn test_create_item() {
-        let db = test_util::setup_test_db().await;
-
+    async fn create_test_item(db: &SqlitePool) -> dev::ServiceResponse {
         let new_item = ItemTemplate {
             name: "foo".to_string(),
             category: "bar".to_string()
         };
 
-        let mut req = test::TestRequest::post()
+        let req = test::TestRequest::post()
             .uri("/item")
             .set_json(&new_item);
-        req = test_util::login_test_user(req, &db).await;
 
-        let mut resp = test_util::make_request(req, &db).await;
-        println!("{:?}", resp);
-        //assert!(resp.status().is_success());
-
-        let body = resp.take_body();
-        let body = body.as_ref().unwrap();
-        if let dev::Body::Bytes(bytes) = body {
-            let string = std::str::from_utf8(&bytes.as_ref()).unwrap();
-            let body: Value = serde_json::from_str(string).unwrap();
-            println!("{:?}", body);
-            println!("{}", body["itemId"])
-        }
-        //assert!(resp.status().is_success());
-        /*assert_eq!(
-            &Body::from(json!({"name":"Test"})), // or serde.....
-            body
-        );*/
-
-        assert_eq!(1,2);
+        test_util::make_request(req, &db).await
     }
 
+    #[actix_rt::test]
+    async fn test_create_item() {
+        let db = test_util::setup_test_db().await;
+
+        let resp = create_test_item(&db).await;
+        assert!(resp.status().is_success());
+
+        let body = test_util::get_resp_body(resp).await;
+
+        assert_eq!("foo", body["name"]);
+        assert_eq!("bar", body["category"]);
+    }
+
+    #[actix_rt::test]
+    async fn test_get_items() {
+        let db = test_util::setup_test_db().await;
+
+        create_test_item(&db).await;
+        let req = test::TestRequest::get()
+            .uri(&format!("/item/{}", 1));
+
+        let resp = test_util::make_request(req, &db).await;
+        assert!(resp.status().is_success());
+
+        let body = test_util::get_resp_body(resp).await;
+        assert_eq!("foo", body["name"]);
+        assert_eq!("bar", body["category"]);
+
+        let req = test::TestRequest::get()
+            .uri("/item");
+
+        let resp = test_util::make_request(req, &db).await;
+        let body = test_util::get_resp_body(resp).await;
+
+        let arr = body.as_array().unwrap();
+        assert_eq!(1,arr.len());
+    }
 }
 
