@@ -95,7 +95,7 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn registers_user() {
+    async fn it_registers_user() {
         let test_state = setup().await;
 
         let user_template = UserTemplate::new("JohnDoe".to_string(), "1234".to_string());
@@ -105,10 +105,10 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn login_user() {
+    async fn it_logs_in_user() {
         let TestState {
             user_service,
-            db
+            db: _db
         } = setup().await;
 
         let user_template = UserTemplate::new("JohnDoe".to_string(), "1234".to_string());

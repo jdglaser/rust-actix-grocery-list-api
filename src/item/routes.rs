@@ -34,10 +34,10 @@ async fn get_items(_: AuthorizationService, state: web::Data<state::AppState>) -
 }
 
 #[post("")]
-async fn create_item(_: AuthorizationService,
+async fn create_item(auth_service: AuthorizationService,
                      state: web::Data<state::AppState>, 
                      new_item: web::Json<ItemTemplate>) -> impl Responder {
-    let created_item = Item::create_item(&state.database_pool, new_item.into_inner()).await;
+    let created_item = Item::create_item(&state.database_pool, new_item.into_inner(), &auth_service.get_username()).await;
 
     match created_item {
         Ok(item) => Ok(HttpResponse::Ok().json(item)),
@@ -75,7 +75,7 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_create_item() {
+    async fn it_creates_an_item() {
         let db = test_util::setup_test_db().await;
 
         let resp = create_test_item(&db).await;
@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_get_items() {
+    async fn it_gets_items() {
         let db = test_util::setup_test_db().await;
 
         create_test_item(&db).await;

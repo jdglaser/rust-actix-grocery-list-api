@@ -2,7 +2,7 @@ use actix_web::{post, Responder, HttpResponse, web};
 use crate::user::UserTemplate;
 use crate::state::AppState;
 
-#[post("/login/")]
+#[post("/login")]
 async fn login(state: web::Data<AppState>, 
                user_template: web::Json<UserTemplate>) -> impl Responder {
     let result = state.user_service.login(user_template.into_inner()).await;
@@ -13,7 +13,7 @@ async fn login(state: web::Data<AppState>,
     }
 }
 
-#[post("/register/")]
+#[post("/register")]
 async fn register(state: web::Data<AppState>,
                   user_template: web::Json<UserTemplate>) -> impl Responder {
     let result = state.user_service.register_user(user_template.into_inner()).await;

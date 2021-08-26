@@ -3,7 +3,7 @@ use sqlx::{Row, sqlite::SqliteRow};
 use anyhow::Result;
 use serde::{Serialize, Deserialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {
     pub user_id: i32,
     pub username: String,
@@ -30,6 +30,16 @@ impl User {
             .fetch_one(db)
             .await?;
 
+        Ok(result)
+    }
+
+    pub async fn find_user_by_id(db: &SqlitePool, user_id: i32) -> Result<User> {
+        let result = sqlx::query("SELECT * FROM user WHERE user_id = ?")
+            .bind(user_id)
+            .map(User::map_user)
+            .fetch_one(db)
+            .await?;
+        
         Ok(result)
     }
 
@@ -88,7 +98,7 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn gets_user() {
+    async fn it_gets_user() {
         let db = test_util::setup_test_db().await;
 
         create_new_user(&db).await;

@@ -30,13 +30,14 @@ pub fn config_app(app_state: web::Data<state::AppState>) -> Box<dyn Fn(&mut web:
         cfg.app_data(
             web::JsonConfig::default().error_handler(
                 |err, _req| {
-                     error::InternalError::from_response(
-                          "",
-                          HttpResponse::BadRequest()
-                              .content_type("application/json")
-                              .body(format!(r#"{{"error":"{}"}}"#, err)),
-                      )
-                      .into()
+                    error!("Error: {}", err);
+                    error::InternalError::from_response(
+                        "",
+                        HttpResponse::BadRequest()
+                            .content_type("application/json")
+                            .body(format!(r#"{{"error":"{}"}}"#, err)),
+                    )
+                    .into()
                   }
             )
         );

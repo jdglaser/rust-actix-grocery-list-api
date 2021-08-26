@@ -23,6 +23,12 @@ pub async fn setup_test_db() -> SqlitePool {
 }
 
 #[allow(dead_code)]
+pub async fn insert_test_user(db: &SqlitePool) {
+    let user_service = UserService::new(db.clone());
+    user_service.register_user(UserTemplate::new("JohnDoe".to_string(), "12345".to_string())).await.unwrap();
+}
+
+#[allow(dead_code)]
 pub async fn login_test_user(req: test::TestRequest, db: &SqlitePool) -> test::TestRequest {
     let test_user = UserTemplate::new("JohnDoe".to_string(), "1234".to_string());
     let user_service = UserService::new(db.clone());
